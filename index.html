@@ -87,6 +87,13 @@ font-size:12px;
 box-sizing:border-box;
 }
 
+.profile-input-label{
+color:white;
+font-size:12px;
+margin-top:10px;
+display:block;
+}
+
 .sidebar a{
 display:block;
 padding:12px;
@@ -114,6 +121,14 @@ padding:10px;
 width: 100%;
 }
 
+.pack-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+padding:10px;
+width: 100%;
+}
+
 .card{
 background:white;
 border-radius:12px;
@@ -133,6 +148,14 @@ width:120px;
 height:120px;
 border-radius:12px;
 margin-bottom:10px;
+}
+
+.pack{
+background:white;
+padding:10px;
+border-radius:10px;
+text-align:center;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 button{
@@ -262,6 +285,10 @@ text-decoration:underline;
 font-weight:bold;
 }
 
+.auth-link span:hover {
+color:#27ae60;
+}
+
 #adminPage {
 width: 100%;
 margin: 0;
@@ -276,6 +303,7 @@ grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
 gap:15px;
 padding:20px;
 width: 100%;
+max-width: 100%;
 }
 
 .admin-card {
@@ -309,6 +337,98 @@ font-size: 13px;
 .admin-table th {
 background:#2ecc71;
 color:white;
+}
+
+#ordersPage {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: none !important;
+  flex-direction: column !important;
+  max-width: 100% !important;
+  background: #f5f5f5;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+#ordersPage.show {
+  display: flex !important;
+}
+
+#ordersList {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  background: #f5f5f5;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  flex: 1 !important;
+  max-height: calc(100vh - 100px) !important;
+}
+
+#ordersList h3 {
+  color: #2ecc71;
+  margin-bottom: 15px;
+  font-size: 20px;
+  position: sticky;
+  top: 0;
+  background: #f5f5f5;
+  padding: 10px 0;
+  z-index: 10;
+}
+
+.order-item {
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+border-right:5px solid #8B4513;
+margin-bottom:10px;
+}
+
+.order-item.completed {
+border-right-color:#2ecc71;
+background:#e8f5e9;
+}
+
+.order-item.rejected {
+border-right-color:#e74c3c;
+background:#ffebee;
+}
+
+.order-item h3 {
+color:#2ecc71;
+margin:10px 0;
+}
+
+.order-item p {
+margin:5px 0;
+font-size:14px;
+}
+
+.order-item .status {
+margin-top:10px;
+font-weight:bold;
+padding:10px;
+border-radius:6px;
+}
+
+.order-item .status.pending {
+color:#8B4513;
+background:#fff3e0;
+}
+
+.order-item .status.completed {
+color:#2ecc71;
+background:#e8f5e9;
+}
+
+.order-item .status.rejected {
+color:#e74c3c;
+background:#ffcdd2;
 }
 
 #adminDetails {
@@ -368,45 +488,8 @@ font-size:18px;
 margin:0;
 }
 
-.order-item {
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-border-right:5px solid #8B4513;
-margin-bottom:10px;
-}
-
-.order-item.completed {
-border-right-color:#2ecc71;
-background:#e8f5e9;
-}
-
-.order-item h3 {
-color:#2ecc71;
-margin:10px 0;
-}
-
-.order-item p {
-margin:5px 0;
-font-size:14px;
-}
-
-.order-item .status {
-margin-top:10px;
-font-weight:bold;
-padding:10px;
-border-radius:6px;
-}
-
-.order-item .status.pending {
-color:#8B4513;
-background:#fff3e0;
-}
-
-.order-item .status.completed {
-color:#2ecc71;
-background:#e8f5e9;
+#paymentsPage {
+display: none;
 }
 
 @media (max-width:600px){
@@ -419,6 +502,19 @@ padding:10px;
 .card img{
 width:80px;
 height:80px;
+}
+#ordersList {
+grid-template-columns:1fr;
+padding: 10px;
+}
+.order-item {
+padding: 15px;
+}
+.admin-table {
+font-size: 12px;
+}
+.admin-table th, .admin-table td {
+padding: 8px;
 }
 }
 </style>
@@ -522,7 +618,7 @@ height:80px;
 <p>السعر: $<span id="appPrice">0.00</span></p>
 </div>
 
-<button onclick="openBuyModal()" style="width:90%;margin:15px auto;display:block;">شراء</button>
+<button onclick="buyApp()" style="width:90%;margin:15px auto;display:block;">شراء</button>
 </div>
 </div>
 
@@ -626,15 +722,15 @@ height:80px;
 
 <div id="ordersPage" style="display:none;">
 <div class="header"><div onclick="goHome()" style="cursor:pointer;">رجوع</div><div>📦 طلباتي</div></div>
-<div id="ordersList" style="padding:20px;overflow-y:auto;max-height:calc(100vh - 100px);"></div>
+<div id="ordersList"></div>
 </div>
 
-<div class="modal" id="buyModal">
+<div class="modal" id="modal">
 <div class="modal-content">
-<div class="close-btn" onclick="closeBuyModal()">✖</div>
-<h3>إدخال ID اللاعب</h3>
-<input id="playerIdInput" placeholder="ادخل ID اللاعب" type="text">
-<button onclick="confirmBuy()" style="width:100%;margin-top:15px;padding:10px;">تأكيد الشراء</button>
+<div class="close-btn" onclick="closeModal()">✖</div>
+<h3>إدخال ID</h3>
+<input id="userId" placeholder="ادخل ID اللاعب">
+<button onclick="confirmBuy()">تأكيد</button>
 </div>
 </div>
 
@@ -642,7 +738,7 @@ height:80px;
   <div class="modal-content" style="width:80%;max-width:400px;">
     <h3>✅ تم استلام طلبك</h3>
     <p>سيتم تجهيز طلبك خلال دقائق</p>
-    <button onclick="closeSuccessPopup()" style="background:#ccc;color:black;width:100%;padding:10px;margin-top:15px;">إغلاق</button>
+    <button onclick="closePopup()" style="background:#ccc;color:black;">إغلاق</button>
   </div>
 </div>
 
@@ -657,6 +753,13 @@ const EXCHANGE_RATES = {
   bank: 46
 };
 
+const CURRENCY_SYMBOLS = {
+  syp: "ل.س",
+  usd: "$",
+  bank: "₺"
+};
+
+// أسعار التطبيقات حسب الكمية
 const appPrices = {
   "يا أهلا": { 1000: 1.788 },
   "Soul Chill": { 1000: 1.760 },
@@ -884,6 +987,7 @@ function logout(){
 function hideAll(){
   ["home","appPage","balancePage","shamSYP","shamUSD","bankPage","ordersPage","paymentsPage","adminPage"].forEach(id=>{
     let el=document.getElementById(id);
+    el.classList.remove("show");
     el.style.display="none";
   });
   document.getElementById("sidebar").classList.remove("open");
@@ -1095,7 +1199,9 @@ function openPayments(){
 
 function openOrders(){
   hideAll();
-  document.getElementById("ordersPage").style.display="block";
+  let ordersPage=document.getElementById("ordersPage");
+  ordersPage.classList.add("show");
+  ordersPage.style.display="flex";
   loadOrders();
 }
 
@@ -1125,7 +1231,13 @@ function openApp(i){
   document.getElementById("appPrice").innerText = "0.00";
 }
 
-function openBuyModal(){
+function buyApp(){
+  let userId=prompt("ادخل ID اللاعب:");
+  if(!userId){
+    alert("⚠️ لازم تدخل ID");
+    return;
+  }
+  
   let amount = parseFloat(document.getElementById("appAmount").value);
   if(!amount || amount <= 0){
     alert("❌ ادخل كمية صحيحة");
@@ -1140,39 +1252,22 @@ function openBuyModal(){
     return;
   }
   
-  selectedAmount = amount;
-  selectedPrice = price;
-  document.getElementById("buyModal").style.display="flex";
-  document.getElementById("playerIdInput").value = "";
-}
-
-function closeBuyModal(){
-  document.getElementById("buyModal").style.display="none";
-}
-
-function confirmBuy(){
-  let playerId = document.getElementById("playerIdInput").value.trim();
-  if(!playerId){
-    alert("⚠️ لازم تدخل ID اللاعب");
-    return;
-  }
-  
   let balance = getBalance();
-  if(balance < selectedPrice){
+  if(balance < price){
     alert("❌ رصيدك لا يكفي");
     return;
   }
   
-  let newBalance = balance - selectedPrice;
+  let newBalance = balance - price;
   setBalance(newBalance);
   
   let user = getUser();
-  saveOrder(selectedApp, selectedAmount, selectedPrice);
+  saveOrder(selectedApp, amount, price);
   
-  sendToTelegram("🛒 طلب شراء جديد\n👤 الإيميل: "+(user.email||"غير معروف")+"\n🆔 ID اللاعب: "+playerId+"\n📱 التطبيق: "+selectedApp+"\n💎 الكمية: "+selectedAmount+"\n💰 السعر: $"+selectedPrice.toFixed(2)+"\n📅 التاريخ: "+new Date().toLocaleDateString('ar-EG')+"\n⏰ الوقت: "+new Date().toLocaleTimeString('ar-EG'));
+  sendToTelegram("🛒 طلب شراء جديد\n👤 الإيميل: "+(user.email||"غير معروف")+"\n🆔 ID: "+userId+"\n📱 التطبيق: "+selectedApp+"\n💎 الكمية: "+amount+"\n💰 السعر: $"+price.toFixed(2)+"\n📅 التاريخ: "+new Date().toLocaleDateString('ar-EG')+"\n⏰ الوقت: "+new Date().toLocaleTimeString('ar-EG'));
   
-  closeBuyModal();
-  document.getElementById("successPopup").style.display = "flex";
+  alert("✅ تم تأكيد الطلب!");
+  goHome();
 }
 
 function sendFormWithImage(type){
@@ -1215,7 +1310,7 @@ function sendFormWithImage(type){
     let user = getUser();
     let username = user.email || "غير معروف";
     
-    sendImageToTelegram(imageData, username, amount, method, currencyType);
+    sendImageToTelegram(imageData, username, amount, method);
     
     // حفظ الدفعة
     savePayment(username, method, amount, imageData, currencyType, type);
@@ -1250,7 +1345,7 @@ function savePayment(email, method, amount, imageData, currencyType, type){
   localStorage.setItem(key, JSON.stringify(payments));
 }
 
-function sendImageToTelegram(imageData, username, amount, method, currencyType){
+function sendImageToTelegram(imageData, username, amount, method){
   fetch(imageData)
     .then(res => res.blob())
     .then(blob => {
@@ -1258,16 +1353,12 @@ function sendImageToTelegram(imageData, username, amount, method, currencyType){
       formData.append('chat_id', CHAT_ID);
       formData.append('photo', blob, 'transfer.jpg');
       formData.append('caption', 
-        `💳 طلب شحن جديد\n👤 المستخدم: ${username}\n💳 الطريقة: ${method}\n💰 المبلغ: ${amount.toFixed(2)} ${currencyType}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n⏰ الوقت: ${new Date().toLocaleTimeString('ar-EG')}`
+        `💳 طلب شحن جديد\n👤 المستخدم: ${username}\n💳 الطريقة: ${method}\n💰 المبلغ: ${amount.toFixed(2)}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n⏰ الوقت: ${new Date().toLocaleTimeString('ar-EG')}`
       );
       
       return fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
         method: 'POST',
         body: formData
-      }).then(response => {
-        if(response.ok){
-          console.log("✅ تم إرسال الصورة للتيليجرام");
-        }
       });
     })
     .catch(e => {
@@ -1275,9 +1366,12 @@ function sendImageToTelegram(imageData, username, amount, method, currencyType){
     });
 }
 
-function closeSuccessPopup(){
+function closePopup(){
   document.getElementById("successPopup").style.display="none";
-  goHome();
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display="none";
 }
 
 function saveOrder(app, amount, price){
@@ -1315,7 +1409,7 @@ function loadOrders(){
     orders.forEach(o=>{
       let statusText=o.completed?"✅ تم التنفيذ":"⏳ قيد الانتظار";
       let statusClass=o.completed?"completed":"";
-      html+=`<div class="order-item ${statusClass}"><h3>${o.app}</h3><p><strong>الكمية:</strong> ${o.amount} 💎</p><p><strong>السعر:</strong> $${o.price}</p><p><strong>📅 التاريخ:</strong> ${o.date}</p><p><strong>⏰ الوقت:</strong> ${o.time}</p><div class="status ${o.completed?"completed":"pending"}"><strong>${statusText}</strong></div></div>`;
+      html+=`<div class="order-item ${statusClass}"><h3>${o.app}</h3><p><strong>الكمية:</strong> ${o.amount} 💎</p><p><strong>السعر:</strong> $${o.price}</p><p><strong>📅 التاريخ:</strong> ${o.date || o.time}</p><p><strong>⏰ الوقت:</strong> ${o.time}</p><div class="status ${o.completed?"completed":"pending"}"><strong>${statusText}</strong></div></div>`;
     });
   }
   
@@ -1350,10 +1444,6 @@ function sendToTelegram(text){
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({chat_id:CHAT_ID,text:text})
-  }).then(response => {
-    if(response.ok){
-      console.log("✅ تم إرسال الرسالة للتيليجرام");
-    }
   }).catch(e=>console.error("خطأ في الإرسال:",e));
 }
 
@@ -1369,7 +1459,6 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById("home").style.display="none";
   }
   document.getElementById("successPopup").style.display="none";
-  document.getElementById("buyModal").style.display="none";
   
   ['sypImage', 'usdImage', 'bankImage'].forEach(id => {
     let element = document.getElementById(id);
@@ -1392,6 +1481,15 @@ document.addEventListener('DOMContentLoaded', function(){
     };
   }
 });
+
+setInterval(() => {
+  if(document.getElementById("ordersPage").classList.contains("show")){
+    loadOrders();
+  }
+  if(document.getElementById("paymentsPage").style.display!=="none"){
+    loadPayments();
+  }
+}, 1000);
 </script>
 
 </body>
