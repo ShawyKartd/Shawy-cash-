@@ -46,8 +46,53 @@ padding:15px;
 transform:translateX(100%);
 transition:0.3s;
 z-index:999;
+overflow-y:auto;
 }
 .sidebar.open{transform:translateX(0);}
+
+.profile-section{
+background:#2c2c44;
+padding:15px;
+border-radius:10px;
+text-align:center;
+margin-bottom:15px;
+}
+
+.profile-image{
+width:80px;
+height:80px;
+border-radius:50%;
+margin:0 auto 10px;
+background:#666;
+object-fit:cover;
+cursor:pointer;
+border:2px solid #2ecc71;
+}
+
+.profile-name{
+color:white;
+font-weight:bold;
+margin-top:10px;
+font-size:14px;
+word-break:break-all;
+}
+
+.profile-input{
+width:100%;
+padding:8px;
+border:1px solid #ddd;
+border-radius:5px;
+margin:5px 0;
+font-size:12px;
+box-sizing:border-box;
+}
+
+.profile-input-label{
+color:white;
+font-size:12px;
+margin-top:10px;
+display:block;
+}
 
 .sidebar a{
 display:block;
@@ -478,6 +523,12 @@ padding: 8px;
 <body>
 
 <div class="sidebar" id="sidebar">
+<div class="profile-section">
+<img id="profileImage" class="profile-image" src="https://via.placeholder.com/80" alt="الصورة الشخصية" onclick="document.getElementById('imageUpload').click();">
+<input type="file" id="imageUpload" accept="image/*" style="display:none;" onchange="uploadProfileImage()">
+<input type="text" id="profileNameInput" class="profile-input" placeholder="أدخل اسمك" onchange="saveProfileName()">
+<div class="profile-name" id="profileNameDisplay"></div>
+</div>
 <a onclick="goHome()">🏠 الرئيسية</a>
 <a onclick="openBalance()">💰 إضافة رصيد</a>
 <a onclick="openPayments()">💳 دفعاتي</a>
@@ -650,7 +701,7 @@ padding: 8px;
 <div class="header"><div onclick="openBalance()" style="cursor:pointer;">رجوع</div><div>زراعات بنك</div></div>
 <div style="padding:10px;">
 <div class="card">
-<div>IBAN: شـᬼ👑⃟⁵⁰⁵ـاوي✈︎</div>
+<div>IBAN: TR000000</div>
 <div>الاسم: اسمك</div>
 </div>
 <p style="text-align:center;color:#2ecc71;font-weight:bold;margin:15px 0 10px 0;">💰 أدخل المبلغ</p>
@@ -694,7 +745,7 @@ padding: 8px;
 <script>
 const TELEGRAM_TOKEN = "8631734604:AAF6IpXFZ40ejHmL6drsqGteNiz7XJNTcmo";
 const CHAT_ID = "8044738479";
-const ADMIN_EMAIL = "admin@admin.com";
+const ADMIN_EMAIL = "mhmdshyl826@gmail.com";
 
 const EXCHANGE_RATES = {
   syp: 134,
@@ -751,7 +802,6 @@ function calculateAppPrice(){
   let price = 0;
   
   if(appPrices[app]){
-    // البحث عن أقرب سعر
     for(let qty in appPrices[app]){
       if(amount >= parseInt(qty)){
         price = (amount / parseInt(qty)) * appPrices[app][qty];
@@ -760,6 +810,47 @@ function calculateAppPrice(){
   }
   
   document.getElementById("appPrice").innerText = price.toFixed(2);
+}
+
+function generateUserCode(){
+  return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
+function uploadProfileImage(){
+  let file = document.getElementById('imageUpload').files[0];
+  if(!file) return;
+  
+  let reader = new FileReader();
+  reader.onload = function(e){
+    let user = getUser();
+    document.getElementById('profileImage').src = e.target.result;
+    localStorage.setItem("profile_image_"+user.email, e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveProfileName(){
+  let name = document.getElementById('profileNameInput').value;
+  let user = getUser();
+  if(!user.email) return;
+  
+  localStorage.setItem("profile_name_"+user.email, name);
+  document.getElementById('profileNameDisplay').innerText = name;
+}
+
+function loadProfile(){
+  let user = getUser();
+  if(!user.email) return;
+  
+  let image = localStorage.getItem("profile_image_"+user.email);
+  let name = localStorage.getItem("profile_name_"+user.email)||"";
+  
+  if(image){
+    document.getElementById('profileImage').src = image;
+  }
+  
+  document.getElementById('profileNameInput').value = name;
+  document.getElementById('profileNameDisplay').innerText = name;
 }
 
 function getUser(){
@@ -777,6 +868,8 @@ function updateBalance(){
   let balance=parseFloat(localStorage.getItem("balance_"+user.email))||0;
   document.getElementById("balanceText").innerText="الرصيد: $"+balance.toFixed(2);
   if(isAdmin()) document.getElementById("adminLink").style.display="block";
+  
+  loadProfile();
 }
 
 function getBalance(){
@@ -790,10 +883,6 @@ function setBalance(amount){
   if(!user.email) return;
   localStorage.setItem("balance_"+user.email, amount);
   updateBalance();
-}
-
-function generateUserCode(){
-  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 function openRegister(){
@@ -928,7 +1017,25 @@ function showAllUsers(){
   
   users.forEach(u=>{
     let balance=parseFloat(localStorage.getItem("balance_"+u.email))||0;
-    html+=`<div class="balance-modal"><h4>👤 ${u.email} | الرقم: ${u.code}</h4><p><strong>💰 الرصيد الحالي:</strong> $${balance.toFixed(2)}</p><div class="balance-controls"><input type="number" id="amount_${u.email}" placeholder="المبلغ" step="0.01"><button onclick="addBalance('${u.email}')">➕ إضافة</button><button onclick="subtractBalance('${u.email}')" style="background:#e74c3c;">➖ طرح</button><button onclick="deleteUser('${u.email}')" style="background:#d9534f;">🗑️ حذف</button></div></div>`;
+    let image = localStorage.getItem("profile_image_"+u.email);
+    let name = localStorage.getItem("profile_name_"+u.email)||u.email;
+    
+    html+=`<div class="balance-modal">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <img src="${image||'https://via.placeholder.com/50'}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;">
+      <div>
+        <h4>👤 ${name}</h4>
+        <p style="font-size:12px;color:#666;">رقم: ${u.code}</p>
+      </div>
+    </div>
+    <p><strong>💰 الرصيد الحالي:</strong> $${balance.toFixed(2)}</p>
+    <div class="balance-controls">
+      <input type="number" id="amount_${u.email}" placeholder="المبلغ" step="0.01">
+      <button onclick="addBalance('${u.email}')">➕ إضافة</button>
+      <button onclick="subtractBalance('${u.email}')" style="background:#e74c3c;">➖ طرح</button>
+      <button onclick="deleteUser('${u.email}')" style="background:#d9534f;">🗑️ حذف</button>
+    </div>
+    </div>`;
   });
   
   html+='<br><button onclick="goBack()" style="width:100%;padding:10px;background:#ccc;color:black;">← رجوع</button>';
@@ -1059,6 +1166,8 @@ function deleteUser(email){
     localStorage.removeItem("balance_"+email);
     localStorage.removeItem("orders_"+email);
     localStorage.removeItem("payments_"+email);
+    localStorage.removeItem("profile_image_"+email);
+    localStorage.removeItem("profile_name_"+email);
     alert("✅ تم الحذف!");
     showAllUsers();
   }
