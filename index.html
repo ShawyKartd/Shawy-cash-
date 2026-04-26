@@ -662,7 +662,7 @@ padding: 8px;
 <input type="number" id="sypAmount" placeholder="أدخل المبلغ بالليرة السورية" step="0.01" oninput="convertCurrency('syp')" style="width:90%;margin:5px auto;padding:10px;border:1px solid #ddd;border-radius:5px;display:block;box-sizing:border-box;">
 
 <div class="usd-display" style="margin:15px auto;width:90%;">
-<p>المبلغ بالدولار: $<span id="sypUSD">0.00</span></p>
+<p><span id="sypAmountDisplay">0.00</span> ليرة سورية = <span id="sypUSD">0.00</span> $</p>
 </div>
 
 <p style="text-align:center;color:#2ecc71;font-weight:bold;margin:15px 0 10px 0;">📸 أرفع صورة الحوالة</p>
@@ -685,7 +685,7 @@ padding: 8px;
 <input type="number" id="usdAmount" placeholder="أدخل المبلغ بالدولار" step="0.01" oninput="convertCurrency('usd')" style="width:90%;margin:5px auto;padding:10px;border:1px solid #ddd;border-radius:5px;display:block;box-sizing:border-box;">
 
 <div class="usd-display" style="margin:15px auto;width:90%;">
-<p>المبلغ بالدولار: $<span id="usdUSD">0.00</span></p>
+<p><span id="usdAmountDisplay">0.00</span> $ = <span id="usdUSD">0.00</span> $</p>
 </div>
 
 <p style="text-align:center;color:#2ecc71;font-weight:bold;margin:15px 0 10px 0;">📸 أرفع صورة الحوالة</p>
@@ -708,7 +708,7 @@ padding: 8px;
 <input type="number" id="bankAmount" placeholder="أدخل المبلغ بالليرة التركية" step="0.01" oninput="convertCurrency('bank')" style="width:90%;margin:5px auto;padding:10px;border:1px solid #ddd;border-radius:5px;display:block;box-sizing:border-box;">
 
 <div class="usd-display" style="margin:15px auto;width:90%;">
-<p>المبلغ بالدولار: $<span id="bankUSD">0.00</span></p>
+<p><span id="bankAmountDisplay">0.00</span> ₺ = <span id="bankUSD">0.00</span> $</p>
 </div>
 
 <p style="text-align:center;color:#2ecc71;font-weight:bold;margin:15px 0 10px 0;">📸 أرفع صورة الحوالة</p>
@@ -753,6 +753,12 @@ const EXCHANGE_RATES = {
   bank: 46
 };
 
+const CURRENCY_SYMBOLS = {
+  syp: "ل.س",
+  usd: "$",
+  bank: "₺"
+};
+
 // أسعار التطبيقات حسب الكمية
 const appPrices = {
   "يا أهلا": { 1000: 1.788 },
@@ -780,18 +786,23 @@ let selectedApp="",selectedAmount=0,selectedPrice=0;
 function convertCurrency(type){
   let amount = 0;
   let resultSpan = '';
+  let amountDisplay = '';
   
   if(type === 'syp'){
     amount = parseFloat(document.getElementById("sypAmount").value) || 0;
     resultSpan = 'sypUSD';
+    amountDisplay = 'sypAmountDisplay';
   } else if(type === 'usd'){
     amount = parseFloat(document.getElementById("usdAmount").value) || 0;
     resultSpan = 'usdUSD';
+    amountDisplay = 'usdAmountDisplay';
   } else if(type === 'bank'){
     amount = parseFloat(document.getElementById("bankAmount").value) || 0;
     resultSpan = 'bankUSD';
+    amountDisplay = 'bankAmountDisplay';
   }
   
+  document.getElementById(amountDisplay).innerText = amount.toFixed(2);
   let usdAmount = amount / EXCHANGE_RATES[type];
   document.getElementById(resultSpan).innerText = usdAmount.toFixed(2);
 }
@@ -1113,7 +1124,7 @@ function showAllPayments(){
       let btnReject=`<button onclick="rejectPayment('${user.email}', ${idx})" style="background:#e74c3c; padding:5px 10px; border-radius:6px; cursor:pointer; margin:2px;">❌</button>`;
       let btns = status==="pending"?btnApprove+btnReject:"";
       
-      html+=`<tr><td>${user.email}</td><td>${p.method}</td><td>$${p.amount}</td><td><span style="color:${statusColor};">${statusText}</span></td><td>${p.date}</td><td>${btns}</td></tr>`;
+      html+=`<tr><td>${user.email}</td><td>${p.method}</td><td>${p.amount} ${p.currency}</td><td><span style="color:${statusColor};">${statusText}</span></td><td>${p.date}</td><td>${btns}</td></tr>`;
     });
   });
   
@@ -1127,11 +1138,11 @@ function approvePayment(email, idx){
   if(payments[idx]){
     payments[idx].status="approved";
     let balance=parseFloat(localStorage.getItem("balance_"+email))||0;
-    let newBalance=balance+payments[idx].amount;
+    let newBalance=balance+payments[idx].usdAmount;
     localStorage.setItem("balance_"+email,newBalance);
     localStorage.setItem("payments_"+email, JSON.stringify(payments));
     alert("✅ تمت الموافقة على الدفعة!");
-    sendToTelegram("✅ تمت الموافقة على دفعتك\n👤 الإيميل: "+email+"\n💳 الطريقة: "+payments[idx].method+"\n💰 المبلغ: $"+payments[idx].amount+"\n💳 الرصيد الجديد: $"+newBalance.toFixed(2));
+    sendToTelegram("✅ تمت الموافقة على دفعتك\n👤 الإيميل: "+email+"\n💳 الطريقة: "+payments[idx].method+"\n💰 المبلغ: "+payments[idx].amount+" "+payments[idx].currency+"\n💵 المبلغ بالدولار: $"+payments[idx].usdAmount.toFixed(2)+"\n💳 الرصيد الجديد: $"+newBalance.toFixed(2));
     showAllPayments();
   }
 }
@@ -1142,7 +1153,7 @@ function rejectPayment(email, idx){
     payments[idx].status="rejected";
     localStorage.setItem("payments_"+email, JSON.stringify(payments));
     alert("❌ تم رفض الدفعة!");
-    sendToTelegram("❌ تم رفض دفعتك\n👤 الإيميل: "+email+"\n💳 الطريقة: "+payments[idx].method+"\n💰 المبلغ: $"+payments[idx].amount);
+    sendToTelegram("❌ تم رفض دفعتك\n👤 الإيميل: "+email+"\n💳 الطريقة: "+payments[idx].method+"\n💰 المبلغ: "+payments[idx].amount+" "+payments[idx].currency);
     showAllPayments();
   }
 }
@@ -1260,20 +1271,23 @@ function buyApp(){
 }
 
 function sendFormWithImage(type){
-  let amountInput, imageInput, method;
+  let amountInput, imageInput, method, currencyType;
   
   if(type === 'syp'){
     amountInput = document.getElementById("sypAmount");
     imageInput = document.getElementById("sypImage");
     method = "شام كاش سوري";
+    currencyType = "ل.س";
   } else if(type === 'usd'){
     amountInput = document.getElementById("usdAmount");
     imageInput = document.getElementById("usdImage");
     method = "شام كاش دولار";
+    currencyType = "$";
   } else if(type === 'bank'){
     amountInput = document.getElementById("bankAmount");
     imageInput = document.getElementById("bankImage");
     method = "زراعات بنك";
+    currencyType = "₺";
   }
   
   let amount = parseFloat(amountInput.value);
@@ -1299,7 +1313,7 @@ function sendFormWithImage(type){
     sendImageToTelegram(imageData, username, amount, method);
     
     // حفظ الدفعة
-    savePayment(username, method, amount, imageData);
+    savePayment(username, method, amount, imageData, currencyType, type);
     
     amountInput.value = "";
     imageInput.value = "";
@@ -1311,13 +1325,17 @@ function sendFormWithImage(type){
   reader.readAsDataURL(file);
 }
 
-function savePayment(email, method, amount, imageData){
+function savePayment(email, method, amount, imageData, currencyType, type){
   let key="payments_"+email;
   let payments=JSON.parse(localStorage.getItem(key))||[];
+  
+  let usdAmount = amount / EXCHANGE_RATES[type];
   
   payments.push({
     method: method,
     amount: amount,
+    currency: currencyType,
+    usdAmount: usdAmount,
     date: new Date().toLocaleDateString('ar-EG'),
     time: new Date().toLocaleTimeString('ar-EG'),
     status: "pending",
@@ -1335,7 +1353,7 @@ function sendImageToTelegram(imageData, username, amount, method){
       formData.append('chat_id', CHAT_ID);
       formData.append('photo', blob, 'transfer.jpg');
       formData.append('caption', 
-        `💳 طلب شحن جديد\n👤 المستخدم: ${username}\n💳 الطريقة: ${method}\n💰 المبلغ: $${amount.toFixed(2)}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n⏰ الوقت: ${new Date().toLocaleTimeString('ar-EG')}`
+        `💳 طلب شحن جديد\n👤 المستخدم: ${username}\n💳 الطريقة: ${method}\n💰 المبلغ: ${amount.toFixed(2)}\n📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n⏰ الوقت: ${new Date().toLocaleTimeString('ar-EG')}`
       );
       
       return fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
@@ -1414,7 +1432,7 @@ function loadPayments(){
     payments.forEach(p=>{
       let statusText=p.status==="approved"?"✅ موافق":p.status==="rejected"?"❌ مرفوض":"⏳ قيد الانتظار";
       let statusClass=p.status==="approved"?"completed":p.status==="rejected"?"rejected":"";
-      html+=`<div class="order-item ${statusClass}"><h3>${p.method}</h3><p><strong>المبلغ:</strong> $${p.amount}</p><p><strong>📅 التاريخ:</strong> ${p.date}</p><p><strong>⏰ الوقت:</strong> ${p.time}</p><div class="status ${p.status}"><strong>${statusText}</strong></div></div>`;
+      html+=`<div class="order-item ${statusClass}"><h3>${p.method}</h3><p><strong>المبلغ:</strong> ${p.amount} ${p.currency}</p><p><strong>بالدولار:</strong> $${p.usdAmount.toFixed(2)}</p><p><strong>📅 التاريخ:</strong> ${p.date}</p><p><strong>⏰ الوقت:</strong> ${p.time}</p><div class="status ${p.status}"><strong>${statusText}</strong></div></div>`;
     });
   }
   
